@@ -8,9 +8,18 @@ from matplotlib.lines import Line2D
 # 1. 页面基本设置
 st.set_page_config(page_title="成绩分布交互分析工具", layout="wide")
 
-# 设置中文显示
-plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'Arial Unicode MS']
+# --- 替换后的代码 ---
+import matplotlib.font_manager as fm
+
+# 1. 尝试寻找系统中可用的中文字体（解决 Linux 服务器无黑体问题）
+# Streamlit Cloud 通常支持内置的无衬线字体渲染中文
+plt.rcParams['font.sans-serif'] = ['WenQuanYi Micro Hei', 'Droid Sans Fallback', 'Source Han Sans CN', 'Arial Unicode MS', 'sans-serif']
 plt.rcParams['axes.unicode_minus'] = False
+
+# 2. 额外强制设置，确保在高版本 matplotlib 中生效
+import matplotlib
+matplotlib.rc('font', family='sans-serif')
+# ------------------
 
 st.title("📊 成绩分布交互式分析网页")
 st.markdown("---")
