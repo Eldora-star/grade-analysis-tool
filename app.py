@@ -5,17 +5,27 @@ import matplotlib.pyplot as plt
 from scipy import stats
 from matplotlib.lines import Line2D
 
+# --- 修改后的代码开头 ---
+import matplotlib.font_manager as font_manager
+import os
+
 # 1. 页面基本设置
 st.set_page_config(page_title="成绩分布交互分析工具", layout="wide")
 
-# --- 替换后的代码 ---
-import matplotlib.font_manager as fm
+# 2. 强制加载同目录下的字体文件
+font_path = 'font.ttf'
+if os.path.exists(font_path):
+    # 注册字体文件
+    font_manager.fontManager.addfont(font_path)
+    prop = font_manager.FontProperties(fname=font_path)
+    # 设置全局字体
+    plt.rcParams['font.sans-serif'] = [prop.get_name()]
+else:
+    # 如果文件不存在，备用方案
+    plt.rcParams['font.sans-serif'] = ['sans-serif']
 
-# 1. 尝试寻找系统中可用的中文字体（解决 Linux 服务器无黑体问题）
-# Streamlit Cloud 通常支持内置的无衬线字体渲染中文
-plt.rcParams['font.sans-serif'] = ['WenQuanYi Micro Hei', 'Droid Sans Fallback', 'Source Han Sans CN', 'Arial Unicode MS', 'sans-serif']
 plt.rcParams['axes.unicode_minus'] = False
-
+# -----------------------
 # 2. 额外强制设置，确保在高版本 matplotlib 中生效
 import matplotlib
 matplotlib.rc('font', family='sans-serif')
@@ -96,7 +106,7 @@ if uploaded_file is not None:
         # 标注 Mu (μ)
         y_max_curve = np.max(y_pdf)
         ax.text(median_val, y_max_curve + mu_offset, f'$\mu$ = {median_val:.2f}', 
-                ha='center', va='bottom', fontsize=11, color='darkviolet', fontweight='bold')
+                ha='center', va='bottom', fontproperties=prop, fontsize=11, color='darkviolet', fontweight='bold')
 
         # 参考线
         ax.axvline(mean_val, color='red', linestyle='-', linewidth=1.5)
@@ -108,9 +118,10 @@ if uploaded_file is not None:
         # 动态留白 Y 轴
         ax.set_ylim(0, max(max(actual_counts), y_max_curve) * 1.3)
         
-        ax.set_title(f"{uploaded_file.name.split('.')[0]} 成绩分布图", fontsize=16, fontweight='bold', pad=20)
-        ax.set_xlabel('分数区间', fontsize=12)
-        ax.set_ylabel('频数 (人数)', fontsize=12)
+        # 修改为（加上 fontproperties=prop）
+        ax.set_title(f"{uploaded_file.name.split('.')[0]} 成绩分布图", fontproperties=prop, fontsize=16, fontweight='bold', pad=20)
+        ax.set_xlabel('分数区间', fontproperties=prop, fontsize=12)
+        ax.set_ylabel('频数 (人数)', fontproperties=prop, fontsize=12)
 
         # --- 6. 图例设置 (参考图一风格) ---
         legend_elements = [
@@ -119,7 +130,7 @@ if uploaded_file is not None:
             Line2D([0], [0], color='darkviolet', lw=2.5, label='正态拟合曲线'),
             plt.Rectangle((0, 0), 1, 1, fc="none", ec="none", label='( )内为理论频数'),
         ]
-        ax.legend(handles=legend_elements, loc='upper left', frameon=True, fontsize=10)
+        ax.legend(handles=legend_elements, loc='upper left', frameon=True, prop=prop)
 
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
