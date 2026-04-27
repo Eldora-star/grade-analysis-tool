@@ -39,7 +39,7 @@ with st.expander("📖 点击展开使用说明"):
     ### 快速上手指南：
     1. **准备数据**：
         * 确保您的 Excel 表格**第一列**是学生的分数（程序会自动读取第一列）。
-        * **文件重命名**：建议将 Excel 文件重命名为 **“年级+学科”**（如：*八年级数学.xlsx*），这样生成的图表标题会自动匹配。
+        * 建议将 Excel 文件重命名为 **“年级+学科”**（如：*八年级数学.xlsx*），这样生成的图表标题会自动匹配。
     2. **上传文件**：点击左侧边栏的 **Browse files**，选中您的成绩表。
     3. **调整参数**：
         * **起始/终止分数**：根据科目总分调整（如：化学 0-100）。
@@ -154,27 +154,60 @@ if uploaded_file is not None:
 
         # 在网页显示图表
         st.pyplot(fig)
-        # --- 以下是新增代码，必须保持和上面的 st.pyplot(fig) 左对齐 ---
+        # --- 找到 st.pyplot(fig) 后，从此开始替换 ---
+
+        st.pyplot(fig)
+
+        st.divider()  # 添加一条分割线，视觉上更清晰
         st.subheader("💡 数据自动诊断报告")
 
-        # 1. 计算偏离度
+        # 1. 核心计算：使用原始高精度数值，避免舍入误差
         analysis_data = []
         for i in range(len(actual_counts)):
-            diff = actual_counts[i] - theoretical_freqs[i]
-            # ... 注意：for 循环里面的内容要比 for 再往右缩进一层 ...
+            # 这里的 diff 是最准确的原始差值
+            diff = actual_counts[i] - theoretical_freqs[i] 
             bin_label = f"{bins[i]} - {bins[i+1]}"
             analysis_data.append({
                 "区间": bin_label,
                 "实际": actual_counts[i],
-                "理论": round(theoretical_freqs[i], 1),
-                "偏离": round(diff, 1)
+                "偏离_原始": diff 
             })
 
-        # 2. 找出特征
-        over_bins = [d for d in analysis_data if d["偏离"] > (n_total * 0.05)]
-        under_bins = [d for d in analysis_data if d["偏离"] < -(n_total * 0.05)]
+        # 2. 识别显著特征 (设置 5% 的人数门槛)
+        threshold = n_total * 0.05
 
-        # ... 剩下的渲染代码也全部保持这个缩进层级 ...
+        # 通过原始值进行高精度筛选
+        over_bins = [d for d in analysis_data if d["偏离_原始"] > threshold]
+        under_bins = [d for d in analysis_data if d["偏离_原始"] < -threshold]
+
+        # 3. 渲染结果：分两列展示
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.write("📈 **人数偏多区间**")
+            if over_bins:
+                for d in over_bins:
+                    val = abs(round(d["偏离_原始"], 1))
+                    st.success(f"**{d['区间']}分**：实际比理论多出 **{val}** 人。该分数段学生非常集中，竞争激烈。")
+            else:
+                st.write("✅ 该成绩段分布平稳，无显著聚集。")
+
+        with col2:
+            st.write("📉 **人数偏少区间**")
+            if under_bins:
+                for d in under_bins:
+                    val = abs(round(d["偏离_原始"], 1))
+                    st.warning(f"**{d['区间']}分**：实际比理论少了 **{val}** 人。该层次学生可能出现断层。")
+            else:
+                st.write("✅ 该成绩段分布平稳，无显著断层。")
+
+        # 4. 底部综合分析
+        st.divider()
+        st.info("**教师教学建议：**")
+        if median_val > mean_val:
+            st.markdown("👉 **当前成绩分布呈现“负偏态”**：高分人数较多，中位数高于平均分，说明试卷难度适中或偏易，大部分学生掌握情况良好。")
+        else:
+            st.markdown("👉 **当前成绩分布呈现“正偏态”**：低分人数偏多，说明题目具有挑战性，或需要加强基础知识的补缺补差。")
         # 底部统计报表
         st.subheader("📋 统计概览")
         c1, c2, c3, c4 = st.columns(4)
