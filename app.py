@@ -153,8 +153,8 @@ if uploaded_file is not None:
         ax.grid(axis='y', linestyle=':', alpha=0.3)
 
         # 在网页显示图表
-        st.pyplot(fig)
-        # --- 找到 st.pyplot(fig) 后，从此开始替换 ---
+    
+        
 
         st.pyplot(fig)
 
