@@ -162,7 +162,31 @@ if uploaded_file is not None:
 
         st.divider()  # 添加一条分割线
         st.subheader("💡 数据自动诊断报告")
+        # --- 补上这两行定义，解决报错 ---
+        min_score = float(df.iloc[:, 0].min())
+        max_score = float(df.iloc[:, 0].max())
 
+        # --- 接下来接之前的诊断逻辑 ---
+        st.divider()
+        st.subheader("💡 数据自动诊断报告")
+
+        # 1. 计算低分段界限 (总分前 40% 范围)
+        analysis_data = []
+        low_score_limit = (max_score - min_score) * 0.4 + min_score 
+
+        for i in range(len(actual_counts)):
+            diff = actual_counts[i] - theoretical_freqs[i] 
+            bin_center = (bins[i] + bins[i+1]) / 2
+            bin_label = f"{bins[i]} - {bins[i+1]}"
+            
+            analysis_data.append({
+                "区间": bin_label,
+                "实际": actual_counts[i],
+                "偏离_原始": diff,
+                "is_low_zone": bin_center < low_score_limit
+            })
+        
+        # ... 后面的逻辑保持不变 ...
         # 1. 核心计算：计算原始差值
         analysis_data = []
         # 计算总分的 40% 作为低分段界限
