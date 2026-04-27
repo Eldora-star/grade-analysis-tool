@@ -32,6 +32,22 @@ matplotlib.rc('font', family='sans-serif')
 # ------------------
 
 st.title("📊 成绩分布交互式分析网页")
+
+# --- 新增使用说明部分 ---
+with st.expander("📖 点击展开使用说明"):
+    st.markdown("""
+    ### 快速上手指南：
+    1. **准备数据**：
+        * 确保您的 Excel 表格**第一列**是学生的分数（程序会自动读取第一列）。
+        * **文件重命名**：建议将 Excel 文件重命名为 **“年级+学科”**（如：*八年级数学.xlsx*），这样生成的图表标题会自动匹配。
+    2. **上传文件**：点击左侧边栏的 **Browse files**，选中您的成绩表。
+    3. **调整参数**：
+        * **起始/终止分数**：根据科目总分调整（如：化学 0-100）。
+        * **步长**：建议设置为 5 或 10，观察不同跨度下的分布情况。
+    4. **保存图片**：右键点击生成的图表，选择“图片另存为”即可。
+    
+    *💡 提示：如果图表显示异常，请检查 Excel 中是否有非数字单元格（如“缺考”或空行）。*
+    """)
 st.markdown("---")
 
 # --- 2. 侧边栏交互设置 ---
@@ -56,14 +72,14 @@ if uploaded_file is not None:
         std_val = np.std(scores)
 
         # 2. 动态区间设置
-        st.sidebar.subheader("2. 范围与步长设置")
+        st.sidebar.subheader("2. 范围与组间距设置")
         # 默认取数据的整十位最小值和最大值
         default_min = int(np.floor(min(scores) / 10) * 10)
         default_max = int(np.ceil(max(scores) / 10) * 10)
         
         start_score = st.sidebar.number_input("起始分数 (横轴左起点)", value=default_min)
         end_score = st.sidebar.number_input("终止分数 (横轴右终点)", value=default_max)
-        bin_width = st.sidebar.slider("调整步长 (Bin Width)", min_value=1, max_value=50, value=10)
+        bin_width = st.sidebar.slider("调整组间距 (Bin Width)", min_value=1, max_value=50, value=10)
         
         st.sidebar.subheader("3. 标注高度调节")
         mu_offset = st.sidebar.slider("μ 标注抬高高度", min_value=0.0, max_value=20.0, value=5.0)
@@ -138,7 +154,27 @@ if uploaded_file is not None:
 
         # 在网页显示图表
         st.pyplot(fig)
+        # --- 以下是新增代码，必须保持和上面的 st.pyplot(fig) 左对齐 ---
+        st.subheader("💡 数据自动诊断报告")
 
+        # 1. 计算偏离度
+        analysis_data = []
+        for i in range(len(actual_counts)):
+            diff = actual_counts[i] - theoretical_freqs[i]
+            # ... 注意：for 循环里面的内容要比 for 再往右缩进一层 ...
+            bin_label = f"{bins[i]} - {bins[i+1]}"
+            analysis_data.append({
+                "区间": bin_label,
+                "实际": actual_counts[i],
+                "理论": round(theoretical_freqs[i], 1),
+                "偏离": round(diff, 1)
+            })
+
+        # 2. 找出特征
+        over_bins = [d for d in analysis_data if d["偏离"] > (n_total * 0.05)]
+        under_bins = [d for d in analysis_data if d["偏离"] < -(n_total * 0.05)]
+
+        # ... 剩下的渲染代码也全部保持这个缩进层级 ...
         # 底部统计报表
         st.subheader("📋 统计概览")
         c1, c2, c3, c4 = st.columns(4)
