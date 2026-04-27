@@ -166,9 +166,6 @@ if uploaded_file is not None:
         min_score = float(df.iloc[:, 0].min())
         max_score = float(df.iloc[:, 0].max())
 
-        # --- 接下来接之前的诊断逻辑 ---
-        st.divider()
-        st.subheader("💡 数据自动诊断报告")
 
         # 1. 计算低分段界限 (总分前 40% 范围)
         analysis_data = []
@@ -248,13 +245,6 @@ if uploaded_file is not None:
         else:
             st.markdown("👉 **当前成绩分布呈现“正偏态”**：低分人数偏多，说明题目具有挑战性，或需要加强基础知识的补缺补差。")
 
-        # 4. 底部综合分析
-        st.divider()
-        st.info("**教师教学建议：**")
-        if median_val > mean_val:
-            st.markdown("👉 **当前成绩分布呈现“负偏态”**：高分人数较多，中位数高于平均分，说明试卷难度适中或偏易，大部分学生掌握情况良好。")
-        else:
-            st.markdown("👉 **当前成绩分布呈现“正偏态”**：低分人数偏多，说明题目具有挑战性，或需要加强基础知识的补缺补差。")
         # 底部统计报表
         st.subheader("📋 统计概览")
         c1, c2, c3, c4 = st.columns(4)
